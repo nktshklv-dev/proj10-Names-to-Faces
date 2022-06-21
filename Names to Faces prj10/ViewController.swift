@@ -41,7 +41,7 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         let imageName = UUID().uuidString
         let imagePath = getDocumentsDirectory().appendingPathComponent(imageName)
         
-        if let jpegData = image.jpegData(compressionQuality: 0.8){
+        if let jpegData = image.jpegData(compressionQuality: 1){
             try? jpegData.write(to: imagePath)
         }
         dismiss(animated: true, completion: nil)
