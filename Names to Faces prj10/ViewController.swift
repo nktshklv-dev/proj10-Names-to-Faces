@@ -68,16 +68,32 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let person = people[indexPath.item]
-        let ac = UIAlertController(title: "Rename person", message: nil, preferredStyle: .alert)
-        ac.addTextField()
-        ac.addAction(UIAlertAction(title: "OK", style: .default){
-            [weak self, weak ac] _ in
-            guard let newName = ac?.textFields?[0].text else{ return }
-            person.name = newName
-            self?.collectionView.reloadData()
+        let firstAc = UIAlertController(title: "Do you want to delete the person, or just rename the picture?", message: nil, preferredStyle: .actionSheet)
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive, handler: {
+            [weak self, weak firstAc] _ in
+            self?.people.remove(at: indexPath.item)
+            collectionView.reloadData()
         })
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(ac, animated: true, completion: nil)
+        
+        
+        let secondAc = UIAlertController(title: "Rename", message: nil, preferredStyle: .alert)
+        secondAc.addTextField()
+        secondAc.addAction(UIAlertAction(title: "Submit", style: .default, handler: {
+            [weak self, weak secondAc] _ in
+            guard let text = secondAc?.textFields![0].text else {return}
+            person.name = text
+            collectionView.reloadData()
+        }))
+        secondAc.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        let renameAction = UIAlertAction(title: "Rename", style: .default, handler: {
+            [weak self, weak firstAc] _ in
+            self?.present(secondAc, animated: true, completion: nil)
+        })
+        
+        firstAc.addAction(renameAction)
+        firstAc.addAction(deleteAction)
+        
+        present(firstAc, animated: true, completion: nil)
     }
 }
 
