@@ -14,6 +14,12 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewPerson))
+        let defaults = UserDefaults.standard
+        if let savedPeople = defaults.object(forKey: "people") as? Data{
+            if let decodedPeople = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(savedPeople) as? [Person]{
+                people = decodedPeople
+            }
+        }
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -57,6 +63,7 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         
         let person = Person(name: "Unkown", image: imageName)
         people.append(person)
+        save()
         collectionView.reloadData()
         dismiss(animated: true, completion: nil)
     }
@@ -70,8 +77,9 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         let person = people[indexPath.item]
         let firstAc = UIAlertController(title: "Do you want to delete the person, or just rename the picture?", message: nil, preferredStyle: .actionSheet)
         let deleteAction = UIAlertAction(title: "Delete", style: .destructive, handler: {
-            [weak self, weak firstAc] _ in
+            [weak self] _ in
             self?.people.remove(at: indexPath.item)
+            self?.save()
             collectionView.reloadData()
         })
         
@@ -82,11 +90,12 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
             [weak self, weak secondAc] _ in
             guard let text = secondAc?.textFields![0].text else {return}
             person.name = text
-            collectionView.reloadData()
+            self?.save()
+            self?.collectionView.reloadData()
         }))
         secondAc.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         let renameAction = UIAlertAction(title: "Rename", style: .default, handler: {
-            [weak self, weak firstAc] _ in
+            [weak self] _ in
             self?.present(secondAc, animated: true, completion: nil)
         })
         
@@ -94,6 +103,14 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         firstAc.addAction(deleteAction)
         
         present(firstAc, animated: true, completion: nil)
+    }
+    
+    
+    func save(){
+        if let savedData =  try? NSKeyedArchiver.archivedData(withRootObject: people, requiringSecureCoding: false){
+            let defaults = UserDefaults.standard
+            defaults.set(savedData, forKey: "people")
+        }
     }
 }
 
